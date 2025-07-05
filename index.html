@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Quiz Game</title>
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Poppins for a playful look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* Custom styles for the game */
+        body {
+            font-family: 'Poppins', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        /* Animation for feedback messages */
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0; transform: translateY(10px); }
+            10%, 90% { opacity: 1; transform: translateY(0); }
+        }
+        .feedback-animation {
+            animation: fadeInOut 3s forwards;
+        }
+    </style>
+</head>
+<body class="bg-blue-50 flex items-center justify-center min-h-screen">
+
+    <!-- Game Container -->
+    <div id="game-container" class="bg-white rounded-2xl shadow-xl p-8 max-w-lg w-full text-center">
+        
+        <!-- Header -->
+        <header class="mb-6">
+            <h1 class="text-4xl font-bold text-blue-600">Math Whiz!</h1>
+            <p class="text-slate-500 mt-1">Answer the question to earn points.</p>
+        </header>
+
+        <!-- Score Display -->
+        <div class="bg-blue-100 rounded-lg p-4 mb-6">
+            <p class="text-lg font-semibold text-blue-800">Score: <span id="score" class="text-2xl font-bold">0</span></p>
+        </div>
+
+        <!-- Question Area -->
+        <main id="question-area" class="mb-6">
+            <p id="question" class="text-3xl font-semibold text-slate-700 h-12 flex items-center justify-center"></p>
+        </main>
+
+        <!-- Answer Input -->
+        <form id="answer-form" class="flex flex-col sm:flex-row gap-4 items-center justify-center">
+            <input type="number" id="answer-input" placeholder="Your answer..." class="w-full sm:w-auto text-center text-xl px-4 py-3 border-2 border-slate-300 rounded-lg focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition duration-300" required>
+            <button type="submit" id="submit-btn" class="w-full sm:w-auto bg-blue-600 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-300 transform hover:scale-105">
+                Submit
+            </button>
+        </form>
+        
+        <!-- Next Question Button (Initially Hidden) -->
+        <button id="next-question-btn" class="mt-4 w-full bg-green-500 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:bg-green-600 focus:outline-none focus:ring-4 focus:ring-green-300 transition-all duration-300 transform hover:scale-105 hidden">
+            Next Question
+        </button>
+
+        <!-- Feedback Message Area -->
+        <div id="feedback-container" class="h-8 mt-4">
+            <p id="feedback" class="text-xl font-semibold"></p>
+        </div>
+
+    </div>
+
+    <script>
+        // --- DOM ELEMENT REFERENCES ---
+        const scoreEl = document.getElementById('score');
+        const questionEl = document.getElementById('question');
+        const answerForm = document.getElementById('answer-form');
+        const answerInput = document.getElementById('answer-input');
+        const submitBtn = document.getElementById('submit-btn');
+        const nextQuestionBtn = document.getElementById('next-question-btn');
+        const feedbackEl = document.getElementById('feedback');
+        const feedbackContainer = document.getElementById('feedback-container');
+
+        // --- GAME STATE ---
+        let score = 0;
+        let correctAnswer;
+
+        // --- GAME LOGIC ---
+
+        /**
+         * Generates a new math question and displays it.
+         */
+        function generateQuestion() {
+            // Clear previous input and feedback
+            answerInput.value = '';
+            feedbackEl.textContent = '';
+            feedbackEl.className = 'text-xl font-semibold';
+            
+            // Show the submission form and hide the next question button
+            answerForm.classList.remove('hidden');
+            nextQuestionBtn.classList.add('hidden');
+            answerInput.focus();
+
+            // Array of operators
+            const operators = ['+', '-', '*', '/'];
+            // Pick a random operator
+            const operator = operators[Math.floor(Math.random() * operators.length)];
+
+            let num1, num2;
+
+            // Generate numbers based on the operator
+            switch (operator) {
+                case '+':
+                    num1 = Math.floor(Math.random() * 20) + 1;
+                    num2 = Math.floor(Math.random() * 20) + 1;
+                    correctAnswer = num1 + num2;
+                    break;
+                case '-':
+                    // Ensure the result is not negative
+                    num1 = Math.floor(Math.random() * 20) + 1;
+                    num2 = Math.floor(Math.random() * num1) + 1; // num2 is always <= num1
+                    correctAnswer = num1 - num2;
+                    break;
+                case '*':
+                    num1 = Math.floor(Math.random() * 10) + 2; // Numbers from 2 to 11
+                    num2 = Math.floor(Math.random() * 10) + 2;
+                    correctAnswer = num1 * num2;
+                    break;
+                case '/':
+                    // Ensure perfect division
+                    const divisor = Math.floor(Math.random() * 10) + 2; // Divisor from 2 to 11
+                    const multiplier = Math.floor(Math.random() * 10) + 2; // Multiplier from 2 to 11
+                    num1 = divisor * multiplier;
+                    num2 = divisor;
+                    correctAnswer = num1 / num2;
+                    break;
+            }
+
+            // Display the question
+            questionEl.textContent = `What is ${num1} ${operator} ${num2}?`;
+        }
+
+        /**
+         * Checks the user's answer against the correct answer.
+         */
+        function checkAnswer() {
+            const userAnswer = parseInt(answerInput.value, 10);
+
+            // Hide the submission form and show the next question button
+            answerForm.classList.add('hidden');
+            nextQuestionBtn.classList.remove('hidden');
+
+            if (userAnswer === correctAnswer) {
+                // Correct answer
+                score += 10; // Add 10 points for a correct answer
+                scoreEl.textContent = score;
+                feedbackEl.textContent = 'Correct! 🎉';
+                feedbackEl.classList.add('text-green-500', 'feedback-animation');
+            } else {
+                // Incorrect answer
+                feedbackEl.textContent = `Wrong! The answer was ${correctAnswer}.`;
+                feedbackEl.classList.add('text-red-500', 'feedback-animation');
+            }
+        }
+
+
+        // --- EVENT LISTENERS ---
+
+        // Handle form submission
+        answerForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            checkAnswer();
+        });
+
+        // Handle "Next Question" button click
+        nextQuestionBtn.addEventListener('click', generateQuestion);
+
+
+        // --- INITIALIZE THE GAME ---
+        window.onload = () => {
+            generateQuestion();
+        };
+
+    </script>
+</body>
+</html>
